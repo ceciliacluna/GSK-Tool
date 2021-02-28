@@ -61,8 +61,13 @@ for objects in data['objects']:
 # add left template to table
 complete_dict.update(collected_data)
 
+
+keys = list(complete_dict.keys())
+print(keys)
+
+
 new_output = pd.DataFrame.from_dict(complete_dict, orient='index')
 new_output = new_output.transpose()
-new_output.sort_values(by=['Agreement'])
-new_output.to_csv(r'C:/Users/CeciliaLuna/Documents/gsk_tool_output.csv', index=False)
+new_output.sort_values(keys, ascending=True)
+new_output.to_csv(r'C:/Users/CeciliaLuna/Documents/gsk_tool_output_1.csv', index=False)
 
