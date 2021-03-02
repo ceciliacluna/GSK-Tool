@@ -49,9 +49,10 @@ complete_dict = {
 collected_data = {}
 for objects in data['objects']:
     object_name = str(objects['object'])
-    url_id = url + object_name + "?" + "id&name__v"
+    url_id = url + object_name + "?" + "id&sort=name__v asc"
     response = requests.request("GET", url_id, headers=headers, data=payload)
     json_file = response.json()
+    print(json_file)
     object_name = json_file['responseDetails']['object']['label_plural']
     json_parse = json_file['data']
     for x in json_parse:
@@ -62,12 +63,11 @@ for objects in data['objects']:
 complete_dict.update(collected_data)
 
 
-keys = list(complete_dict.keys())
-print(keys)
+# keys = list(complete_dict.keys())
+# print(keys)
 
 
 new_output = pd.DataFrame.from_dict(complete_dict, orient='index')
 new_output = new_output.transpose()
-new_output.sort_values(keys, ascending=True)
-new_output.to_csv(r'C:/Users/CeciliaLuna/Documents/gsk_tool_output_1.csv', index=False)
+new_output.to_csv(r'C:/Users/CeciliaLuna/Documents/gsk_output_1.csv', index=False)
 
