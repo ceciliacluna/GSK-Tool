@@ -116,10 +116,8 @@ class GSKTool:
 
     # Prompts user to select input file
     def input_location(self):
-        global input_path, data
-        input_path = filedialog.askopenfilename(title="Select a file", filetypes=[("Json File", "*.json")])
-        data = json.load(open(input_path))
-        print(data)
+        global input_path
+        input_path = filedialog.askopenfilename(title="Select a file", filetypes=[("Excel files", ".xlsx .xls")])
         self.input_entry.delete(1, END)  # Remove current text in entry
         self.input_entry.insert(0, input_path)  # Insert the 'path'
 
@@ -177,19 +175,20 @@ class GSKTool:
 
         }
 
+        data = pd.read_excel(input_path)
         self.progress.pack(side=BOTTOM, anchor=S, pady=10)
         collected_data = {}
-        for objects in data['objects']:
+        for index, row in data.iterrows():
             self.progress.step()
-            object_name = str(objects['object'])
+            object_name = str(row['Object'])
             url_id = full_url + object_name + "?" + "id&sort=name__v asc"
             response = requests.request("GET", url_id, headers=headers, data=payload)
             json_file = response.json()
-            object_name = json_file['responseDetails']['object']['label_plural']
+            object_name_resp = json_file['responseDetails']['object']['label_plural']
             json_parse = json_file['data']
             for x in json_parse:
                 attribute = x['name__v']
-                collected_data.setdefault(object_name, []).append(attribute)
+                collected_data.setdefault(object_name_resp, []).append(attribute)
 
         selected_option = self.selected_from_dropdown.get()
 

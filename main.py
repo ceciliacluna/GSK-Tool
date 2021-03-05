@@ -53,11 +53,12 @@ for objects in data['objects']:
     response = requests.request("GET", url_id, headers=headers, data=payload)
     json_file = response.json()
     print(json_file)
-    object_name = json_file['responseDetails']['object']['label_plural']
+    object_name_resp = json_file['responseDetails']['object']['label_plural']
+    print(object_name_resp, "Object name from response")
     json_parse = json_file['data']
     for x in json_parse:
         attribute = x['name__v']
-        collected_data.setdefault(object_name, []).append(attribute)
+        collected_data.setdefault(object_name_resp, []).append(attribute)
 
 
 # add left template to table
