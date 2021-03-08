@@ -12,7 +12,7 @@ import traceback
 class GSKTool:
     def __init__(self, master):
         self.master = master
-        master.title('GSK Sections Tool')
+        master.title('GSK Enrichment Tool')
 
         self.complete_consumer = {
             "Agreement": ["Assessment", "Form", "Plan", "Policy_and_Procedure", "Protocol", "Quality_and_Audit",
@@ -97,7 +97,7 @@ class GSKTool:
         self.password_input.grid(row=2, column=0, pady=5, sticky=E)
         self.password_entry.grid(row=2, column=1, pady=5)
 
-        self.login_button.grid(row=4, column=1, pady=5, padx=(30, 90), sticky=NSEW)
+        self.login_button.grid(row=4, column=1, pady=5, padx=(10, 105), sticky=NSEW)
 
         self.dropdown.grid(row=0, column=2, padx=10, sticky=E)
 
@@ -149,7 +149,7 @@ class GSKTool:
             response = requests.request("POST", full_url, headers=headers, params=payload, files=files)
             auth_content = response.json()
             session_id = auth_content['sessionId']
-            self.log_in_successful.grid(row=5, column=1, pady=5, padx=(30, 90), sticky=NSEW)
+            self.log_in_successful.grid(row=5, column=1, pady=5, padx=(10, 105), sticky=NSEW)
         except requests.ConnectionError:
             showerror(title="Error", message="The URL entered is incorrect")
         except Exception:
@@ -176,7 +176,7 @@ class GSKTool:
         }
 
         data = pd.read_excel(input_path)
-        self.progress.pack(side=BOTTOM, anchor=S, pady=10)
+        self.progress.pack(side=BOTTOM, anchor=S, pady=10, padx=(20, 30))
         collected_data = {}
 
         temp_url = "https://sb-gskch-quality.veevavault.com"
@@ -219,7 +219,7 @@ class GSKTool:
 
         new_output = new_output.transpose()
         new_output.to_csv(output_path + '/' + file_name + '.csv', index=False)
-        self.completed.pack()
+        self.completed.pack(side=BOTTOM, anchor=S, pady=10, padx=(20, 30))
         self.progress.pack_forget()
 
 
