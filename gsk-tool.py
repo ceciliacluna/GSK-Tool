@@ -4,9 +4,9 @@ from tkinter.messagebox import showerror
 import tkinter.filedialog as filedialog
 import requests
 import pandas as pd
-import json
 import threading
-import time
+import logging
+import traceback
 
 
 class GSKTool:
@@ -178,17 +178,34 @@ class GSKTool:
         data = pd.read_excel(input_path)
         self.progress.pack(side=BOTTOM, anchor=S, pady=10)
         collected_data = {}
-        for index, row in data.iterrows():
-            self.progress.step()
-            object_name = str(row['Object'])
-            url_id = full_url + object_name + "?" + "id&sort=name__v asc"
-            response = requests.request("GET", url_id, headers=headers, data=payload)
-            json_file = response.json()
-            object_name_resp = json_file['responseDetails']['object']['label_plural']
-            json_parse = json_file['data']
-            for x in json_parse:
-                attribute = x['name__v']
-                collected_data.setdefault(object_name_resp, []).append(attribute)
+
+        temp_url = "https://sb-gskch-quality.veevavault.com"
+        try:
+            for index, row in data.iterrows():
+                self.progress.step()
+                object_name = str(row['Object'])
+                url_id = full_url + object_name + "?" + "id&sort=name__v asc"
+                while True:
+                    response = requests.request("GET", url_id, headers=headers, data=payload)
+                    json_file = response.json()
+                    object_name_resp = json_file['responseDetails']['object']['label_plural']
+                    json_parse = json_file['data']
+                    print(json_file)
+                    for x in json_parse:
+                        attribute = x['name__v']
+                        collected_data.setdefault(object_name_resp, []).append(attribute)
+                    try:
+                        next_page = json_file['responseDetails']['next_page']
+                        url_id = temp_url + next_page
+                        if next_page is None or next_page == "":
+                            break
+                    except KeyError:
+                        break
+        except KeyError:
+            raise KeyError(json_file)
+
+        except Exception:
+            raise
 
         selected_option = self.selected_from_dropdown.get()
 
