@@ -73,7 +73,7 @@ class GSKTool:
         self.login_button = Button(self.input_frame, text='Login', command=self.authenticate)
         self.log_in_successful = Label(self.input_frame, text="Login Successful", fg="blue", font="Helvetica 9 bold", pady=6)
 
-        self.progress = Progressbar(master, orient=HORIZONTAL, length=100, mode='indeterminate')
+        self.progress = Progressbar(master, orient=HORIZONTAL, length=150, mode="determinate", maximum=1000, value=0)
 
         self.begin_button = Button(self.bottom_frame, text='Begin!', command=self.being_task)
 
@@ -180,8 +180,9 @@ class GSKTool:
 
         temp_url = "https://sb-gskch-quality.veevavault.com"
         try:
+            self.progress.start()
+            self.progress.step(5)
             for index, row in data.iterrows():
-                self.progress.step()
                 object_name = str(row['Object'])
                 url_id = full_url + object_name + "?" + "id&sort=name__v asc"
                 while True:
