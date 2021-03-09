@@ -1,3 +1,4 @@
+import json
 from tkinter import Tk, Label, Frame, Entry, OptionMenu, Button, END, TOP, HORIZONTAL, BOTTOM, W, S, E, NSEW, StringVar
 from tkinter.ttk import Progressbar
 from tkinter.messagebox import showerror
@@ -5,8 +6,6 @@ import tkinter.filedialog as filedialog
 import requests
 import pandas as pd
 import threading
-import logging
-import traceback
 
 
 class GSKTool:
@@ -190,7 +189,6 @@ class GSKTool:
                     json_file = response.json()
                     object_name_resp = json_file['responseDetails']['object']['label_plural']
                     json_parse = json_file['data']
-                    print(json_file)
                     for x in json_parse:
                         attribute = x['name__v']
                         collected_data.setdefault(object_name_resp, []).append(attribute)
@@ -202,6 +200,8 @@ class GSKTool:
                     except KeyError:
                         break
         except KeyError:
+            error = json_file['errors'][0]['message']
+            showerror(title="Error", message=error)
             raise KeyError(json_file)
 
         except Exception:
