@@ -6,6 +6,7 @@ import tkinter.filedialog as filedialog
 import requests
 import pandas as pd
 import threading
+import re
 
 
 class GSKTool:
@@ -73,7 +74,7 @@ class GSKTool:
         self.login_button = Button(self.input_frame, text='Login', command=self.authenticate)
         self.log_in_successful = Label(self.input_frame, text="Login Successful", fg="blue", font="Helvetica 9 bold", pady=6)
 
-        self.progress = Progressbar(master, orient=HORIZONTAL, length=150, mode="determinate", maximum=1000, value=0)
+        self.progress = Progressbar(master, orient=HORIZONTAL, length=150, mode="determinate", maximum=1500, value=0)
 
         self.begin_button = Button(self.bottom_frame, text='Begin!', command=self.being_task)
 
@@ -165,7 +166,9 @@ class GSKTool:
         self.completed.pack_forget()
         file_name = self.file_name_entry.get()
         url = self.url_entry.get()
+        temp_url = "https://sb-gskch-quality.veevavault.com"
         full_url = url + '/api/v19.1/vobjects/'
+        picklist_url = url + '/api/v19.1/objects/picklists/'
         payload = {}
         files = {}
         headers = {
@@ -178,13 +181,23 @@ class GSKTool:
         self.progress.pack(side=BOTTOM, anchor=S, pady=10, padx=(20, 30))
         collected_data = {}
 
-        temp_url = "https://sb-gskch-quality.veevavault.com"
         try:
             self.progress.start()
             self.progress.step(5)
             for index, row in data.iterrows():
                 object_name = str(row['Object'])
                 url_id = full_url + object_name + "?" + "id&sort=name__v asc"
+                if object_name.startswith('picklist-'):
+                    picklist = object_name.removeprefix('picklist-')
+                    picklist_col_name = re.sub(r'[\W_]', ' ', picklist).removesuffix('c').title()
+                    picklist_url_id = picklist_url + picklist + "?" + "sort=label asc"
+                    picklist_response = requests.request("GET", picklist_url_id, headers=headers, data=payload)
+                    picklist_json_file = picklist_response.json()
+                    plist_json_parse = picklist_json_file['picklistValues']
+                    for x in plist_json_parse:
+                        label = x['label']
+                        collected_data.setdefault(picklist_col_name, []).append(label)
+                    continue
                 while True:
                     response = requests.request("GET", url_id, headers=headers, data=payload)
                     json_file = response.json()
@@ -201,6 +214,8 @@ class GSKTool:
                     except KeyError:
                         break
         except KeyError:
+            self.progress.stop()
+            self.progress.pack_forget()
             error = json_file['errors'][0]['message']
             showerror(title="Error", message=error)
             raise KeyError(json_file)
