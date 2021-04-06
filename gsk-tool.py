@@ -148,6 +148,7 @@ class GSKTool:
         try:
             response = requests.request("POST", full_url, headers=headers, params=payload, files=files)
             auth_content = response.json()
+            print(auth_content)
             session_id = auth_content['sessionId']
             self.log_in_successful.grid(row=5, column=1, pady=5, padx=(10, 105), sticky=NSEW)
         except requests.ConnectionError:
@@ -180,19 +181,22 @@ class GSKTool:
         data = pd.read_excel(input_path)
         self.progress.pack(side=BOTTOM, anchor=S, pady=10, padx=(20, 30))
         collected_data = {}
-
+        data = data[data['Object'].notna()]
         try:
             self.progress.start()
             self.progress.step(5)
             for index, row in data.iterrows():
-                object_name = str(row['Object'])
+                object_name = str(row['Object']).lower()
                 url_id = full_url + object_name + "?" + "id&sort=name__v asc"
                 if object_name.startswith('picklist-'):
-                    picklist = object_name.removeprefix('picklist-')
+                    picklist = object_name.removeprefix('picklist-').lower()
                     picklist_col_name = re.sub(r'[\W_]', ' ', picklist).removesuffix('c').title()
                     picklist_url_id = picklist_url + picklist + "?" + "sort=label asc"
                     picklist_response = requests.request("GET", picklist_url_id, headers=headers, data=payload)
                     picklist_json_file = picklist_response.json()
+                    if len(picklist_json_file) == 2:
+                        showerror(title="Error", message='Picklist: ' + picklist + ' does not have picklist values')
+                        continue
                     plist_json_parse = picklist_json_file['picklistValues']
                     for x in plist_json_parse:
                         label = x['label']
@@ -203,21 +207,29 @@ class GSKTool:
                     json_file = response.json()
                     object_name_resp = json_file['responseDetails']['object']['label_plural']
                     json_parse = json_file['data']
-                    for x in json_parse:
-                        attribute = x['name__v']
-                        collected_data.setdefault(object_name_resp, []).append(attribute)
-                    try:
-                        next_page = json_file['responseDetails']['next_page']
-                        url_id = temp_url + next_page
-                        if next_page is None or next_page == "":
-                            break
-                    except KeyError:
+                    if len(json_file['data']) == 0:
+                        showerror(title="Error", message='Object: ' + object_name_resp + ' does not have data')
                         break
-        except KeyError:
+                    else:
+                        for x in json_parse:
+                            attribute = x['name__v']
+                            collected_data.setdefault(object_name_resp, []).append(attribute)
+                        try:
+                            next_page = json_file['responseDetails']['next_page']
+                            url_id = temp_url + next_page
+                            if next_page is None or next_page == "":
+                                break
+                        except KeyError:
+                            break
+        except KeyError as e:
             self.progress.stop()
             self.progress.pack_forget()
-            error = json_file['errors'][0]['message']
-            showerror(title="Error", message=error)
+            if e.args[0] == 'picklistValues':
+                error = picklist_json_file['errors'][0]['message']
+                showerror(title="Error", message=error)
+            else:
+                error = json_file['errors'][0]['message']
+                showerror(title="Error", message=error)
             raise KeyError(json_file)
 
         except Exception:

@@ -21,6 +21,7 @@ headers = {
 
 response = requests.request("POST", url, headers=headers, params=payload, files=files)
 authContent = response.json()
+print(authContent)
 sessionID = authContent['sessionId']
 
 obj_url = 'https://sb-gskch-quality.veevavault.com/api/v19.1/vobjects/'
